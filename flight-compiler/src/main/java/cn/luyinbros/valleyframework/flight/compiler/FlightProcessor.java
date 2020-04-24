@@ -2,16 +2,19 @@ package cn.luyinbros.valleyframework.flight.compiler;
 
 import com.google.auto.common.SuperficialValidation;
 import com.google.auto.service.AutoService;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.JavaFile;
 
-import net.ltgt.gradle.incap.IncrementalAnnotationProcessor;
-import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType;
 
+
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
@@ -20,6 +23,7 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
 import cn.luyinbros.valleyframework.flight.annotation.RouteComponent;
@@ -27,9 +31,10 @@ import cn.luyinbros.valleyframework.flight.annotation.RouteComponentFactory;
 import cn.luyinbros.valleyframework.flight.annotation.RouteInterceptor;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.DYNAMIC)
+//@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.DYNAMIC)
 @AutoService(Processor.class)
 public class FlightProcessor extends AbstractProcessor {
+    private Filer mFilter;
     private String moduleName = "";
 
 
@@ -57,22 +62,20 @@ public class FlightProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-
+        mFilter = processingEnv.getFiler();
         CompileMessager.setMessager(processingEnv.getMessager());
         Map<String, String> options = processingEnv.getOptions();
         moduleName = options.get("routeModule");
 
-
     }
-
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
-
+        RouteModuleSet routeModuleSet = new RouteModuleSet(moduleName);
         for (Element element : env.getElementsAnnotatedWith(RouteComponent.class)) {
             if (!SuperficialValidation.validateElement(element)) continue;
             try {
-                parseRouteComponent(element);
+                parseRouteComponent(routeModuleSet, element);
             } catch (Exception e) {
                 error(element, e);
             }
@@ -95,12 +98,33 @@ public class FlightProcessor extends AbstractProcessor {
                 error(element, e);
             }
         }
-
+        JavaFile javaFile = routeModuleSet.brewJava();
+        try {
+            javaFile.writeTo(mFilter);
+        } catch (IOException e) {
+            // CompileMessager.error(typeElement, "Unable to write binding for type %s: %s", typeElement, e.getMessage());
+        }
         return false;
     }
 
-    private void parseRouteComponent(Element element) {
+    private void parseRouteComponent(RouteModuleSet routeModuleSet, Element element) {
+        if (Check.isInvalidateRouteComponent(element)) {
+            return;
+        }
 
+        RouteModuleSet.Component component = new RouteModuleSet.Component();
+        RouteComponent routeComponent = element.getAnnotation(RouteComponent.class);
+        component.path = routeComponent.value();
+
+        TypeMirror typeMirror = element.asType();
+
+        if (TypeHelper.isSubtypeOfType(typeMirror, Constants.TYPE_ACTIVITY)) {
+            component.type = RouteModuleSet.ComponentType.ACTIVITY;
+        } else {
+            component.type = RouteModuleSet.ComponentType.OTHER;
+        }
+        component.className = ClassName.get((TypeElement) element);
+        routeModuleSet.addComponent(component);
 
     }
 

@@ -12,44 +12,15 @@ import cn.luyinbros.valleyframework.flight.RouteRequest;
 import cn.luyinbros.valleyframework.flight.annotation.RouteComponentFactory;
 
 
-@RouteComponentFactory
+//@RouteComponentFactory
 public class DefaultRouteComponentFactory implements ComponentFactory {
 
     @Override
-    public Component createActivityRouteComponent(Class<? extends Activity> cls) {
-        return new ActivityRouteComponent(cls);
-    }
-
-    @Override
-    public Component createFragmentComponent(Class<? extends Fragment> cls) {
+    public Component createActivityRouteComponent(String activityCls) {
         return null;
     }
 
-    private class ActivityRouteComponent implements Component {
-        private final Class<? extends Activity> cls;
 
-        public ActivityRouteComponent(Class<? extends Activity> cls) {
-            this.cls = cls;
-        }
 
-        @Override
-        public void route(Context context, RouteRequest request) {
 
-        }
-
-        @Override
-        public void route(Activity activity, RouteRequest request) {
-
-        }
-
-        @Override
-        public void route(Fragment fragment, RouteRequest request) {
-
-        }
-
-        @Override
-        public Intent newIntent(Context context, RouteRequest request) {
-            return null;
-        }
-    }
 }

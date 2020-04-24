@@ -21,9 +21,8 @@ public class Check {
         }
         TypeMirror typeMirror = element.asType();
         if (!(TypeHelper.isSubtypeOfType(typeMirror, Constants.TYPE_ACTIVITY) ||
-                TypeHelper.isSubtypeOfType(typeMirror, Constants.TYPE_FRAGMENT) ||
                 TypeHelper.isSubtypeOfType(typeMirror, Constants.TYPE_ROUTE_COMPONENT))) {
-            CompileMessager.error(element, "routeComponent only support activity fragment Component");
+            CompileMessager.error(element, "routeComponent only support activity Component");
             return true;
         }
 

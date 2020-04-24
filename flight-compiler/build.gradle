@@ -15,8 +15,8 @@ dependencies {
     if (file!=null){
         compileOnly files(file)
     }
-    api deps.incap.runtime
-    compileOnly deps.incap.processor
+//    api deps.incap.runtime
+//    compileOnly deps.incap.processor
 }
 
 

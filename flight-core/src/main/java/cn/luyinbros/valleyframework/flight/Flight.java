@@ -35,8 +35,8 @@ public class Flight {
         return new FragmentRequestManager(fragment);
     }
 
-    public void register(String path, Class<? extends Activity> cls) {
-        routeComponentProvider.register(path, getRouteComponentFactory().createActivityRouteComponent(cls));
+    public void registerComponent(String path, Component component) {
+        routeComponentProvider.register(path, component);
     }
 
     public void setRouteComponentFactory(ComponentFactory factory) {
@@ -59,16 +59,9 @@ public class Flight {
     private static class DefaultRouteComponentFactory implements ComponentFactory {
 
         @Override
-        public Component createActivityRouteComponent(Class<? extends Activity> cls) {
-            return new ActivityRouteComponent(cls);
-        }
-
-        @Override
-        public Component createFragmentComponent(Class<? extends Fragment> cls) {
+        public Component createActivityRouteComponent(String activityCls) {
             return null;
         }
-
-
 
         private static class ActivityRouteComponent implements Component {
             private final Class<? extends Activity> cls;
