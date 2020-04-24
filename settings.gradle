@@ -1,0 +1,5 @@
+rootProject.name='Flight'
+include ':app'
+include ':flight-annotation'
+include ':flight-core'
+include ':flight-compiler'

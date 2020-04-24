@@ -1,0 +1,24 @@
+import org.gradle.internal.jvm.Jvm
+//apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'java-library'
+
+//group = GROUP
+//version = VERSION
+
+dependencies {
+    implementation project(':flight-annotation')
+    implementation deps.auto.common
+    api deps.javapoet
+    implementation deps.auto.service
+    annotationProcessor deps.auto.service
+    def file=Jvm.current().getToolsJar()
+    if (file!=null){
+        compileOnly files(file)
+    }
+    api deps.incap.runtime
+    compileOnly deps.incap.processor
+}
+
+
+sourceCompatibility = "8"
+targetCompatibility = "8"
