@@ -1,8 +1,13 @@
 apply plugin: 'java-library'
 
+group = GROUP
+version = VERSION
+
 dependencies {
 
 }
 
-sourceCompatibility = "7"
-targetCompatibility = "7"
+sourceCompatibility = "8"
+targetCompatibility = "8"
+
+apply from: rootProject.file('gradle/javaUpload.gradle')
