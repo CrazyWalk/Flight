@@ -3,11 +3,15 @@ package cn.luyinbros.valleyframework.flight;
 import android.app.Application;
 
 public abstract class RouteModule {
-    private final Application application;
+    protected final Application mApplication;
 
     public RouteModule(Application application) {
-        this.application = application;
+        this.mApplication = application;
     }
 
     public abstract void init(Flight flight);
+
+    public Application getApplication(){
+        return mApplication;
+    }
 }

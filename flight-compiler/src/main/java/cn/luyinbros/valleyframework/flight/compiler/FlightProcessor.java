@@ -6,10 +6,10 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 
 
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,7 +22,10 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
@@ -65,7 +68,7 @@ public class FlightProcessor extends AbstractProcessor {
         mFilter = processingEnv.getFiler();
         CompileMessager.setMessager(processingEnv.getMessager());
         Map<String, String> options = processingEnv.getOptions();
-        moduleName = options.get("routeModule");
+        moduleName = options.get("flightModule");
 
     }
 
@@ -84,7 +87,7 @@ public class FlightProcessor extends AbstractProcessor {
         for (Element element : env.getElementsAnnotatedWith(RouteComponentFactory.class)) {
             if (!SuperficialValidation.validateElement(element)) continue;
             try {
-                parseRouteComponentFactory(element);
+                parseRouteComponentFactory(routeModuleSet,element);
             } catch (Exception e) {
                 error(element, e);
             }
@@ -93,7 +96,7 @@ public class FlightProcessor extends AbstractProcessor {
         for (Element element : env.getElementsAnnotatedWith(RouteInterceptor.class)) {
             if (!SuperficialValidation.validateElement(element)) continue;
             try {
-                parseRouteInterceptor(element);
+                parseRouteInterceptor(routeModuleSet,element);
             } catch (Exception e) {
                 error(element, e);
             }
@@ -124,17 +127,76 @@ public class FlightProcessor extends AbstractProcessor {
             component.type = RouteModuleSet.ComponentType.OTHER;
         }
         component.className = ClassName.get((TypeElement) element);
+
+        {
+            TypeElement typeElement = ElementHelper.asType(element);
+
+            for (Element enclosedElement : typeElement.getEnclosedElements()) {
+                if (enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
+                    ExecutableElement executableElement = ElementHelper.asExecutable(enclosedElement);
+                    List<? extends VariableElement> vars = executableElement.getParameters();
+                    if (vars.size() == 1) {
+                        VariableElement variableElement = vars.get(0);
+                        if (TypeHelper.isTypeEqual(variableElement.asType(), Constants.TYPE_APPLICATION)) {
+                            component.hasApplication = true;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
         routeModuleSet.addComponent(component);
 
     }
 
-    private void parseRouteComponentFactory(Element element) {
+    private void parseRouteComponentFactory(RouteModuleSet routeModuleSet, Element element) {
+        if (Check.isInvalidateRouteComponentFactory(element)) {
+            return;
+        }
+        RouteModuleSet.ComponentFactory factory = new RouteModuleSet.ComponentFactory();
+        factory.className = ClassName.get((TypeElement) element);
+        TypeElement typeElement = ElementHelper.asType(element);
+
+        for (Element enclosedElement : typeElement.getEnclosedElements()) {
+            if (enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
+                ExecutableElement executableElement = ElementHelper.asExecutable(enclosedElement);
+                List<? extends VariableElement> vars = executableElement.getParameters();
+                if (vars.size() == 1) {
+                    VariableElement variableElement = vars.get(0);
+                    if (TypeHelper.isTypeEqual(variableElement.asType(), Constants.TYPE_APPLICATION)) {
+                        factory.hasApplication = true;
+                    }
+                }
+                break;
+            }
+        }
+        routeModuleSet.setComponentFactory(factory);
 
     }
 
 
-    private void parseRouteInterceptor(Element element) {
+    private void parseRouteInterceptor(RouteModuleSet routeModuleSet,Element element) {
+        if (Check.isInvalidateRouteInterceptor(element)) {
+            return;
+        }
+        RouteModuleSet.Interceptor interceptor = new RouteModuleSet.Interceptor();
+        interceptor.className = ClassName.get((TypeElement) element);
+        TypeElement typeElement = ElementHelper.asType(element);
 
+        for (Element enclosedElement : typeElement.getEnclosedElements()) {
+            if (enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
+                ExecutableElement executableElement = ElementHelper.asExecutable(enclosedElement);
+                List<? extends VariableElement> vars = executableElement.getParameters();
+                if (vars.size() == 1) {
+                    VariableElement variableElement = vars.get(0);
+                    if (TypeHelper.isTypeEqual(variableElement.asType(), Constants.TYPE_APPLICATION)) {
+                        interceptor.hasApplication = true;
+                    }
+                }
+                break;
+            }
+        }
+        routeModuleSet.addInterceptor(interceptor);
     }
 
 

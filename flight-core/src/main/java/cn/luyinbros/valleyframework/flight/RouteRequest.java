@@ -3,17 +3,23 @@ package cn.luyinbros.valleyframework.flight;
 import android.os.Bundle;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
 public class RouteRequest {
     private final String path;
     private final Bundle bundle;
-
+    private final int requestCode;
+    private final Bundle options;
 
     private RouteRequest(Builder builder) {
         this.path = builder.path;
-        this.bundle=builder.bundle;
+        this.bundle = builder.bundle;
+        this.requestCode = builder.requestCode;
+        this.options = builder.options;
     }
 
 
@@ -21,17 +27,26 @@ public class RouteRequest {
         return path;
     }
 
-
+    @NonNull
     public Bundle extra() {
         return bundle;
     }
 
+    public int requestCode() {
+        return requestCode;
+    }
+
+    @Nullable
+    public Bundle options() {
+        return options;
+    }
 
 
     public static class Builder {
         private String path;
-        private Bundle bundle;
-
+        private Bundle bundle = new Bundle();
+        private int requestCode;
+        private Bundle options;
 
         public Builder path(String path) {
             this.path = path;
@@ -171,6 +186,17 @@ public class RouteRequest {
 
         public Builder putBundle(String key, Bundle value) {
             bundle.putBundle(key, value);
+            return this;
+        }
+
+
+        public Builder setOptions(Bundle options) {
+            this.options = options;
+            return this;
+        }
+
+        public Builder requestCode(int requestCode) {
+            this.requestCode = requestCode;
             return this;
         }
 

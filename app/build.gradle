@@ -5,7 +5,7 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "cn.luyinbros.flight"
+        applicationId "cn.luyinbros.demo"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
@@ -15,9 +15,10 @@ android {
 
         javaCompileOptions {
             annotationProcessorOptions {
-                arguments = ['routeModule': 'AppRouteModule']
+                arguments = ['flightModule': 'AppRouteModule']
             }
         }
+
     }
 
     buildTypes {
@@ -26,7 +27,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        encoding 'UTF-8'
 
+    }
 
 }
 
@@ -39,6 +46,9 @@ dependencies {
     implementation project(':flight-core')
     annotationProcessor project(':flight-compiler')
 
+    //controller
+    implementation deps.controller
+    annotationProcessor deps.controller
 
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'

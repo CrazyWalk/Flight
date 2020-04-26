@@ -1,21 +1,25 @@
 package cn.luyinbros.valleyframework.flight;
 
+import android.app.Activity;
+import android.content.Context;
+
 import androidx.fragment.app.Fragment;
 
-class FragmentRequestManager implements RequestManager {
-    private Fragment fragment;
+class FragmentRequestManager extends AbstractRequestManager {
+    private final Fragment fragment;
 
     FragmentRequestManager(Fragment fragment) {
         this.fragment = fragment;
     }
 
+
     @Override
-    public RequestManager request(RouteRequest request) {
-        return this;
+    protected void route(Component component, RouteRequest request) {
+        component.route(fragment, request);
     }
 
     @Override
-    public void route() {
-
+    public Context getContext() {
+        return fragment.getContext();
     }
 }

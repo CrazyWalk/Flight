@@ -1,34 +1,57 @@
 package cn.luyinbros.valleyframework.flight;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 
 import androidx.fragment.app.Fragment;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Flight {
     private RouteComponentProvider routeComponentProvider = new RouteComponentProvider();
     private ComponentFactory routeComponentFactory;
+    private List<Interceptor> interceptors = new ArrayList<>();
     private volatile static Flight INSTANCE;
+    private Application application;
 
 
-    private Flight() {
+    private Flight(Application application) {
+        this.application = application;
+    }
+
+
+    public static void registerModule(RouteModule... routeModules) {
+        Application application = routeModules[0].getApplication();
+        Flight flight = get(application);
+        for (RouteModule routeModule : routeModules) {
+            flight._registerModule(routeModule);
+        }
+    }
+
+    public static void registerModule(Application application, String... classNames) {
+        Flight flight = get(application);
+        for (String s : classNames) {
+            try {
+                Class<?> cls = Class.forName("flight.module." + s);
+                RouteModule routeModule = (RouteModule) cls.getConstructors()[0].newInstance(application);
+                flight._registerModule(routeModule);
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
-    public static Flight get() {
-        if (INSTANCE == null) {
-            synchronized (Flight.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new Flight();
-                }
-            }
-        }
-        return INSTANCE;
+    public static RequestManager with(Context context) {
+        return new ContextRequestManager(context);
     }
 
     public static RequestManager with(Activity activity) {
-        return new ActivityRequestManager(activity, get());
+        return new ActivityRequestManager(activity);
     }
 
     public static RequestManager with(Fragment fragment) {
@@ -37,6 +60,10 @@ public class Flight {
 
     public void registerComponent(String path, Component component) {
         routeComponentProvider.register(path, component);
+    }
+
+    public void addInterceptor(Interceptor interceptor) {
+        interceptors.add(interceptor);
     }
 
     public void setRouteComponentFactory(ComponentFactory factory) {
@@ -55,46 +82,25 @@ public class Flight {
         return routeComponentFactory;
     }
 
-
-    private static class DefaultRouteComponentFactory implements ComponentFactory {
-
-        @Override
-        public Component createActivityRouteComponent(String activityCls) {
-            return null;
-        }
-
-        private static class ActivityRouteComponent implements Component {
-            private final Class<? extends Activity> cls;
-
-            private ActivityRouteComponent(Class<? extends Activity> cls) {
-                this.cls = cls;
-            }
-
-            @Override
-            public void route(Context context, RouteRequest request) {
-
-            }
-
-            @Override
-            public void route(Activity activity, RouteRequest request) {
-
-            }
-
-            @Override
-            public void route(Fragment fragment, RouteRequest request) {
-
-            }
+    public List<Interceptor> getInterceptors() {
+        return interceptors;
+    }
 
 
-
-
-            @Override
-            public Intent newIntent(Context context, RouteRequest request) {
-                return null;
+    static Flight get(Context context) {
+        if (INSTANCE == null) {
+            synchronized (Flight.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new Flight((Application) context.getApplicationContext());
+                }
             }
         }
+        return INSTANCE;
+    }
 
 
+    private void _registerModule(RouteModule routeModule) {
+        routeModule.init(this);
     }
 
 }
